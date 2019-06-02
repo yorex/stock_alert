@@ -1,4 +1,4 @@
-export FLASK_APP=dashboard.py
+export FLASK_APP=controller.py
 export FLASK_ENV=development
 
-flask run --host=0.0.0.0 --port=5000
+nohup flask run --host=0.0.0.0 --port=5000 &
