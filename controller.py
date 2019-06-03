@@ -4,6 +4,7 @@ app = Flask(__name__)
 import io
 import random
 import json
+import rule_engine
 from flask import jsonify
 from flask import render_template
 
@@ -25,10 +26,6 @@ def get_balance():
         dates=[]
         balances=[]
         hongsengIndex=[]
-        ruleEmergCount=[]
-        ruleEmerg=[]
-        ruleWarnCount=[]
-        ruleWarn=[]
         for line in fp:
             if not line or len(line)==0: 
                 continue
@@ -36,19 +33,21 @@ def get_balance():
             dates.append(items[0])
             balances.append(int(items[1]))
             hongsengIndex.append(10000)
-            ruleEmerg.append(items[2:3])
-            ruleEmergCount.append(1 if len(items[2])>0 else 0)
-            ruleWarn.append(items[3:4])
-            ruleWarnCount.append(1 if len(items[3])>0 else 0)
-        print 'hahs'
+#            ruleEmerg.append(items[2:3])
+#            ruleEmergCount.append(1 if len(items[2])>0 else 0)
+#            ruleWarn.append(items[3:4])
+#            ruleWarnCount.append(1 if len(items[3])>0 else 0)
+        rule_engine = RuleEngine(DT_BALANCES=balances)
+        alerts = rule_engine.inspect()
+
         return jsonify({
             "dates":dates,
             "balances":balances,
             "hongsengIndex":hongsengIndex,
-            "ruleEmergCount":ruleEmergCount,
-            "ruleEmerg":ruleEmerg,
-            "ruleWarnCount":ruleWarnCount,
-            "ruleWarn":ruleWarn
+            "ruleEmergCount":[len(x) for x in alerts[EMERG]],
+            "ruleEmerg":alerts[EMERG],
+            "ruleWarnCount":[],
+            "ruleWarn":[len(x) for x in alerts[WARN]]
         })
 
 
