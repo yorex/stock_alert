@@ -5,8 +5,11 @@ import io
 import random
 import json
 import rule_engine
+import helper
 from flask import jsonify
 from flask import render_template
+
+mahelper = helper.MaHelper()
 
 ##
 # data format:
@@ -20,34 +23,39 @@ from flask import render_template
 #       "ruleWarn":[]
 #    }
 #
-@app.route('/getBalance')
-def get_balance():
-    with open('static/data/balance.dat', 'r') as fp:
+@app.route('/getBalanceHsi')
+def get_balance_hsi():
+    app.logger.info("getBalanceHsi")
+    with open('static/data/balance_hsi.dat', 'r') as fp:
         dates=[]
         balances=[]
         hongsengIndex=[]
         for line in fp:
             if not line or len(line)==0: 
                 continue
-            items = line.strip().split("|")
+            items = line.strip().split()
+            if len(items) != 3:
+                app.logger.error("getBalanceHsi, invalid data line(%s)", line)
+                continue
             dates.append(items[0])
-            balances.append(int(items[1]))
-            hongsengIndex.append(10000)
-#            ruleEmerg.append(items[2:3])
-#            ruleEmergCount.append(1 if len(items[2])>0 else 0)
-#            ruleWarn.append(items[3:4])
-#            ruleWarnCount.append(1 if len(items[3])>0 else 0)
-        rule_engine = RuleEngine(DT_BALANCES=balances)
-        alerts = rule_engine.inspect()
+            hongsengIndex.append(float(items[1]))
+            balances.append(int(items[2]))
+        engine = rule_engine.RuleEngine(app)
+#        engine.add_rule(rule_engine.SequenceMonotonicityRule(app, hongsengIndex))
+        ma5sequences = mahelper.getMa(5, hongsengIndex)
+        app.logger.info("ma5sequences: %s", ma5sequences)
+        engine.add_rule(rule_engine.SequenceMonotonicityRule(app, ma5sequences))
+        alerts = engine.inspect()
+        app.logger.info("alerts: %s", alerts)
 
         return jsonify({
             "dates":dates,
             "balances":balances,
             "hongsengIndex":hongsengIndex,
-            "ruleEmergCount":[len(x) for x in alerts[EMERG]],
-            "ruleEmerg":alerts[EMERG],
-            "ruleWarnCount":[],
-            "ruleWarn":[len(x) for x in alerts[WARN]]
+            "ruleEmergCount":[len(x) for x in alerts[rule_engine.EMERG]],
+            "ruleEmerg":alerts[rule_engine.EMERG],
+            "ruleWarnCount":[len(x) for x in alerts[rule_engine.WARN]],
+            "ruleWarn":alerts[rule_engine.WARN]
         })
 
 
