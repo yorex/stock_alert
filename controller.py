@@ -6,6 +6,7 @@ import random
 import json
 import rule_engine
 import helper
+import logger
 from flask import jsonify
 from flask import render_template
 
@@ -25,7 +26,7 @@ mahelper = helper.MaHelper()
 #
 @app.route('/getBalanceHsi')
 def get_balance_hsi():
-    app.logger.info("getBalanceHsi")
+    logger.debug(app, "getBalanceHsi")
     with open('static/data/balance_hsi.dat', 'r') as fp:
         dates=[]
         balances=[]
@@ -35,7 +36,7 @@ def get_balance_hsi():
                 continue
             items = line.strip().split()
             if len(items) != 3:
-                app.logger.error("getBalanceHsi, invalid data line(%s)", line)
+                logger.error(app, "getBalanceHsi, invalid data line(%s)", line)
                 continue
             dates.append(items[0])
             hongsengIndex.append(float(items[1]))
@@ -43,10 +44,10 @@ def get_balance_hsi():
         engine = rule_engine.RuleEngine(app)
 #        engine.add_rule(rule_engine.SequenceMonotonicityRule(app, hongsengIndex))
         ma5sequences = mahelper.getMa(5, hongsengIndex)
-        app.logger.info("ma5sequences: %s", ma5sequences)
-        engine.add_rule(rule_engine.SequenceMonotonicityRule(app, ma5sequences))
+        #engine.add_rule(rule_engine.SequenceMonotonicityRule(app, ma5sequences))
+        engine.add_rule(rule_engine.RapidDownRule(app, hongsengIndex, 0.02))
         alerts = engine.inspect()
-        app.logger.info("alerts: %s", alerts)
+        logger.debug(app, "alerts: %s", alerts)
 
         return jsonify({
             "dates":dates,
