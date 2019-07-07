@@ -16,7 +16,7 @@ class Rule:
         self.alerts = {EMERG:[], WARN:[]}
         self.app = app
         self.sequences = sequences
-        logger.debug(self.app, "SequenceMonotonicityRule.sequences: %s", str(sequences))
+        logger.debug("SequenceMonotonicityRule.sequences: %s", str(sequences))
 
     def append_emerg(self, emerg):
         self.alerts[EMERG].append(emerg)
@@ -87,13 +87,13 @@ class RuleEngine:
         for rule in self.rules:
             try:
                 alert = rule.inspect()
-                logger.info(self.app, "rule(%s) output(%s)", str(rule), alert)
+                logger.info("rule(%s) output(%s)", str(rule), alert)
                 if alert[EMERG]:
                     alerts[EMERG] += alert[EMERG]
                 if alert[WARN]:
                     alerts[WARN] += alert[WARN]
             except Exception as e:
-                logger.error(self.app, "rule(%s) exception(%s)", str(rule), e)
+                logger.error("rule(%s) exception(%s)", str(rule), e)
         return alerts
 
 

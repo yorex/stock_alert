@@ -26,7 +26,7 @@ mahelper = helper.MaHelper()
 #
 @app.route('/getBalanceHsi')
 def get_balance_hsi():
-    logger.debug(app, "getBalanceHsi")
+    logger.debug("getBalanceHsi")
     with open('static/data/balance_hsi.dat', 'r') as fp:
         dates=[]
         balances=[]
@@ -36,7 +36,7 @@ def get_balance_hsi():
                 continue
             items = line.strip().split()
             if len(items) != 3:
-                logger.error(app, "getBalanceHsi, invalid data line(%s)", line)
+                logger.error("getBalanceHsi, invalid data line(%s)", line)
                 continue
             dates.append(items[0])
             hongsengIndex.append(float(items[1]))
@@ -47,7 +47,7 @@ def get_balance_hsi():
         #engine.add_rule(rule_engine.SequenceMonotonicityRule(app, ma5sequences))
         engine.add_rule(rule_engine.RapidDownRule(app, hongsengIndex, 0.02))
         alerts = engine.inspect()
-        logger.debug(app, "alerts: %s", alerts)
+        logger.debug("alerts: %s", alerts)
 
         return jsonify({
             "dates":dates,
