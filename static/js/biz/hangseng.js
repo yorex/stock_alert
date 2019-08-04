@@ -34,8 +34,8 @@ function formatTip(params, datas) {
 }
 
 
-$.get('getBalanceHsi', function (datas) {
-	var myChart = echarts.init(document.getElementById('balance'));
+$.get('getBalanceHsiYahoo', function (datas) {
+	var myChart = echarts.init(document.getElementById('hangseng'));
 
     var colors = ['#5793f3', '#675bba', '#EB8E55', '#d14a61'];
     

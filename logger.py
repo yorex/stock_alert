@@ -29,17 +29,17 @@ def debug(*kargs):
     loc_app.logger.debug(*kargs)
     #print(kargs[0] % kargs[1:])
 
-def info(app, *kargs):
+def info(*kargs):
     if LEVEL_INFO < level:
         return
     loc_app.logger.info(*kargs)
 
-def warn(app, *kargs):
+def warn(*kargs):
     if LEVEL_WARN < level:
         return
     loc_app.logger.warn(*kargs)
 
-def error(app, *kargs):
+def error(*kargs):
     if LEVEL_ERROR < level:
         return
     loc_app.logger.error(*kargs)
@@ -51,19 +51,19 @@ def debug_print(*kargs):
     print(kargs[0] % kargs[1:])
 
 
-def info_print(app, *kargs):
+def info_print(*kargs):
     if LEVEL_INFO < level:
         return
     loc_app.logger.info(*kargs)
     print(kargs[0] % kargs[1:])
 
-def warn_print(app, *kargs):
+def warn_print(*kargs):
     if LEVEL_WARN < level:
         return
     loc_app.logger.warn(*kargs)
     print(kargs[0] % kargs[1:])
 
-def error_print(app, *kargs):
+def error_print(*kargs):
     if LEVEL_ERROR < level:
         return
     loc_app.logger.error(*kargs)
