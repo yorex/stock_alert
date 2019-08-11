@@ -10,6 +10,7 @@ import logger
 from flask import jsonify
 from flask import render_template
 from mongoHelper import MongoHelper
+from report import AlertSummary
 
 mahelper = helper.MaHelper()
 
@@ -65,13 +66,13 @@ def get_hangseng_index_local():
 @app.route('/getBalanceHsiYahoo')
 def get_hangseng_index_yahoo():
     logger.debug("getBalanceHsiYahoo")
-    hangsengHelper = MongoHelper("127.0.0.1", "stock", "hangseng_index")
+    hangsengHelper = MongoHelper("127.0.0.1", "stock" )
     dates=[]
     volumes=[]
     hongsengIndex=[]
     emergs=[]
     warns=[]
-    hangseng_datas = hangsengHelper.find({})
+    hangseng_datas = hangsengHelper.find("hangseng_index", {})
     for rec in hangseng_datas:
         dates.append(rec["date"])
         hongsengIndex.append(rec["dclose"])
@@ -90,6 +91,10 @@ def get_hangseng_index_yahoo():
         "ruleWarn":warns
     })
 
+@app.route('/report')
+def report():
+    alert_summart = AlertSummary()
+    return jsonify(alert_summart.generateSummary())
 
 
 @app.route('/stock')

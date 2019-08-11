@@ -12,22 +12,33 @@ import mongoHelper
 class SpecHangsengRule(Rule):
     def __init__(self):
         Rule.__init__(self)
-        self.mongo_helper = mongoHelper.MongoHelper('127.0.0.1', 'stock', 'hangseng_index')
+        self.mongo_helper = mongoHelper.MongoHelper('127.0.0.1', 'stock')
 
     def name(self):
         return "spec_hangseng"
     
     def get_percent(self, before, now):
         return 1.0*(now - before) / before
+
+    def is_valid(self, data):
+        if not (data.has_key(ALERT_EMERGS) and data[ALERT_EMERGS].has_key(self.name()) or data.has_key(ALERT_WARNS) and data[ALERT_WARNS].has_key(self.name())):
+            return False
+        if not data.has_key("date") or len(data["date"]) == 0:
+            return False
+        dims=["dopen", "dclose", "dmax", "dmin", "volume"]
+        for dim in dims:
+            if not data.has_key(dim) or data[dim] <= 0:
+                return False
+        return True
     
     # force=true 表示强制计算全部告警
     def inspect(self, force=False):
-        datas = self.mongo_helper.find({})
+        datas = self.mongo_helper.find('hangseng_index', {})
         begin = 0
         if not force:
             # 定位到最近的未告警的记录
             for data in datas:
-                if data.has_key(ALERT_EMERGS) and data[ALERT_EMERGS].has_key(self.name()) or data.has_key(ALERT_WARNS) and data[ALERT_WARNS].has_key(self.name()):
+                if self.is_valid(data):
                     begin+=1
                     continue
         logger.info("SpecHangsengRule set range begin at index(%d)" % begin)
@@ -36,7 +47,7 @@ class SpecHangsengRule(Rule):
             emerg=[]
             warn=[]
             # if rapid down, check situation
-            if i>=1 and self.get_percent(datas[i-1]["dclose"], datas[i]["dclose"]) < -0.25:
+            if i>=1 and self.get_percent(datas[i-1]["dclose"], datas[i]["dclose"]) < -0.015:
                 emerg.append("极降，确认原因; 是否极端事件?")
             if i>=3 and datas[i-3]["dclose"] > datas[i-2]["dclose"] > datas[i-1]["dclose"] > datas[i]["dclose"]:
                 # if continue 3 down, 50% cut
@@ -47,7 +58,7 @@ class SpecHangsengRule(Rule):
             datas[i].setdefault(ALERT_EMERGS, {})[self.name()]=emerg
             datas[i].setdefault(ALERT_WARNS, {})[self.name()]=warn
 
-            self.mongo_helper.update({"_id":datas[i]["_id"]}, datas[i])
+            self.mongo_helper.update('hangseng_index', {"_id":datas[i]["_id"]}, datas[i])
 
 
 if __name__ == "__main__":

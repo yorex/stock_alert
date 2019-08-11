@@ -6,13 +6,11 @@ import logger
 import pymongo
 
 class MongoHelper:
-    def __init__(self, host, dbName, collectionName):
+    def __init__(self, host, dbName):
         self.dbName = dbName
-        self.collectionName = collectionName 
         try:
             self.conn = MongoClient(host, 27017)
             self.db = self.conn[dbName]
-            self.collection = self.db[collectionName]
         except Exception as e:
             logger.error("mongo exception: %s" % str(e))
 
@@ -57,29 +55,33 @@ class MongoHelper:
         data.sort(self.cmp_date)
         print data
 
-    def insert(self, data):
+    def insert(self, collectionName, data):
         ## 例如insert({"name":"zhangsan","age":18})
-        if self.collection:
-            return self.collection.insert(data)
+        collection = self.db[collectionName]
+        if collection:
+            return collection.insert(data)
         else:
             logger.error("mongo is not inited, insert fail")
     
-    def update(self, query, update, isUpsert=True):
-        if self.collection:
-            return self.collection.update(query, {"$set":update}, upsert=isUpsert)
+    def update(self, collectionName, query, update, isUpsert=True):
+        collection = self.db[collectionName]
+        if collection:
+            return collection.update(query, {"$set":update}, upsert=isUpsert)
         else:
             logger.error("mongo is not inited, update fail")
     
-    def remove(self, query):
-        if self.collection:
-            return self.collection.remove(query)
+    def remove(self, collectionName, query):
+        collection = self.db[collectionName]
+        if collection:
+            return collection.remove(query)
         else:
             logger.error("mongo is not inited, remove fail")
 
     # sort ascending by key:date
-    def find(self, query):
-        if self.collection:
-            cursor = self.collection.find(query).sort("date", pymongo.ASCENDING)
+    def find(self, collectionName, query):
+        collection = self.db[collectionName]
+        if collection:
+            cursor = collection.find(query).sort("date", pymongo.ASCENDING)
             datas = [d for d in cursor]
             cursor.close()
             return datas 
@@ -88,16 +90,18 @@ class MongoHelper:
 
 
 if __name__ == '__main__':
-    mongo=MongoHelper('127.0.0.1', 'stock', 'test2')
-    print(mongo.insert({"date":"20190804", "index":234}))
+    mongo=MongoHelper('127.0.0.1', 'stock')
+    date="20190810"
+    collection='test2'
+    print(mongo.insert(collection, {"date":date, "index":234}))
     
-    result=mongo.find({"date":"20190804"})
+    result=mongo.find(collection, {"date":date})
     for r in result:
         print("r:%s" % r)
 
-    mongo.remove({"date":"20190804"})
+    mongo.remove(collection, {"date":date})
     
-    result=mongo.find({})
-    print("size: %d" % result.count())
+    result=mongo.find(collection, {})
+    print("size: %d" % len(result))
     for r in result:
         print("r:%s" % r)

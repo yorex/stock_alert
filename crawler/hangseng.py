@@ -22,7 +22,7 @@ class HangsengIndex:
         self.html = ""
         self.indexs = {}
         self.date = datetime.date.today().strftime("%Y%m%d")
-        self.mongo_helper = MongoHelper("127.0.0.1", "stock", "hangseng_index")
+        self.mongo_helper = MongoHelper("127.0.0.1", "stock")
 
     def curl_hangseng_index_sina_simple(self):
         url = "http://hq.sinajs.cn/list=int_hangseng"
@@ -36,7 +36,7 @@ class HangsengIndex:
             "dclose": dclose, 
             "percent": percent
         }
-        self.mongo_helper.update({"date":self.date}, data, True)
+        self.mongo_helper.update("hangseng_index", {"date":self.date}, data, True)
 
     def to_float(self, s):
         return float(s.replace(",", ""))
@@ -46,33 +46,41 @@ class HangsengIndex:
         self.url = "https://hk.finance.yahoo.com/quote/%5EHSI/history?ltr=1&guccounter=1&guce_referrer=aHR0cHM6Ly94dWVxaXUuY29tL1MvSEtIU0k&guce_referrer_sig=AQAAAGtP5FNuYYONKlKt1JtDLAgcUo-MVNSIxtMO_BxUBIFKPizNuHf4vtkm02FxryW_4EUcsB8rGo_U6uh7ZKrhB_uCdnbHa_3uduuzCYCrACfVPPBgD5AyoZ5LecKNdeVKOv9sRpvXyaMuruL3J-GFKBSIHYxmJEwnrZR5rrhiFMR9"
         for line in urllib.urlopen(self.url):
             # grep 日期 | grep tbody | sed -e "s@</tr>@\n@g" | grep 年 | grep 月 | grep 日
-            if line.find("日期") > 0 and line.find("tbody") > 0:
-                trs = line.split("</tr>")
-                for tr in trs:
-                    if tr.startswith("<tr class"):
-                        bsO=BeautifulSoup(tr, "html.parser")
-                        #print(">>>> ")
-                        # 日期    開市    最高    最低    收市*    經調整收市價**    成交量
-                        #for span in bsO.find_all('span'):
-                        #    print(span.string)
-                        datas = bsO.find_all('span')
-                        if len(datas) >= 7:
-                            date= time.strftime("%Y%m%d", time.strptime(datas[0].string.encode("utf-8"), "%Y年%m月%d日"))
-                            dopen = self.to_float(datas[1].string)
-                            dmax = self.to_float(datas[2].string)
-                            dmin = self.to_float(datas[3].string)
-                            dclose = self.to_float(datas[4].string)
-                            volume = self.to_float(datas[6].string)
-                            #print("%s %s %s %s %s %s" % (date, dopen, dmax, dmin, dclose, volume))
-                            data={
-                                "date":date, 
-                                "dopen":dopen, 
-                                "dmax":dmax, 
-                                "dmin":dmin, 
-                                "dclose":dclose, 
-                                "volume":volume
-                            }
-                            self.mongo_helper.update({"date":date}, data, True)
+            tbody_start = line.find("<tbody")
+            if line.find("日期") >= 0 and tbody_start >= 0:
+                tbody_stop=line.find("</tbody>")
+                if tbody_stop < 0:
+                    logger.warn_print("no </tbody> found")
+                    continue
+                tbody_stop += len("</tbody>")
+                line = line[tbody_start:tbody_stop]
+                #print("line: %s" % line)
+
+                table=BeautifulSoup(line, "html.parser")
+                for tr in table.find_all('tr'):
+                    #print(">>>> ")
+                    # 日期    開市    最高    最低    收市*    經調整收市價**    成交量
+                    #for span in bsO.find_all('span'):
+                    #    print(span.string)
+                    datas = tr.find_all('span')
+                    if len(datas) >= 5:
+                        date= time.strftime("%Y%m%d", time.strptime(datas[0].string.encode("utf-8"), "%Y年%m月%d日"))
+                        dopen = self.to_float(datas[1].string)
+                        dmax = self.to_float(datas[2].string)
+                        dmin = self.to_float(datas[3].string)
+                        dclose = self.to_float(datas[4].string)
+                        volume = self.to_float(datas[6].string) if len(datas) > 6 else 0
+                        #print("%s %s %s %s %s %s" % (date, dopen, dmax, dmin, dclose, volume))
+                        data={
+                            "date":date, 
+                            "dopen":dopen, 
+                            "dmax":dmax, 
+                            "dmin":dmin, 
+                            "dclose":dclose, 
+                            "volume":volume
+                        }
+                        self.mongo_helper.update("hangseng_index", {"date":date}, data, True)
+            #            print(data)
     
 if __name__ == "__main__":
     retry=0
