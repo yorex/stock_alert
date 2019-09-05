@@ -1,5 +1,6 @@
 from flask import Flask
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
 
 import io
 import random
@@ -7,12 +8,13 @@ import json
 import rule_engine
 import helper
 import logger
-from flask import jsonify
+from flask import jsonify, request
 from flask import render_template
 from mongoHelper import MongoHelper
 from report import AlertSummary
 
 mahelper = helper.MaHelper()
+
 
 ##
 # data format:
@@ -93,7 +95,8 @@ def get_hangseng_index_yahoo():
 
 @app.route('/report')
 def report():
-    alert_summart = AlertSummary()
+    date=request.args.get("date")
+    alert_summart = AlertSummary(date)
     return jsonify(alert_summart.generateSummary())
 
 

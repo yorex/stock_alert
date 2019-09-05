@@ -4,6 +4,7 @@
 from pymongo import MongoClient
 import logger
 import pymongo
+import types
 
 class MongoHelper:
     def __init__(self, host, dbName):
@@ -87,7 +88,7 @@ class MongoHelper:
             return datas 
         else:
             logger.error("mongo is not inited, remove fail")
-
+    
 
 if __name__ == '__main__':
     mongo=MongoHelper('127.0.0.1', 'stock')
