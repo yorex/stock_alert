@@ -7,10 +7,10 @@ import pymongo
 import types
 
 class MongoHelper:
-    def __init__(self, host, dbName):
+    def __init__(self, dbName):
         self.dbName = dbName
         try:
-            self.conn = MongoClient(host, 27017)
+            self.conn = MongoClient("127.0.0.1", 27017)
             self.db = self.conn[dbName]
         except Exception as e:
             logger.error("mongo exception: %s" % str(e))
@@ -64,10 +64,10 @@ class MongoHelper:
         else:
             logger.error("mongo is not inited, insert fail")
     
-    def update(self, collectionName, query, update, isUpsert=True):
+    def update(self, collectionName, query, data, isUpsert=True):
         collection = self.db[collectionName]
         if collection:
-            return collection.update(query, {"$set":update}, upsert=isUpsert)
+            return collection.update(query, {"$set":data}, upsert=isUpsert)
         else:
             logger.error("mongo is not inited, update fail")
     
@@ -91,7 +91,7 @@ class MongoHelper:
     
 
 if __name__ == '__main__':
-    mongo=MongoHelper('127.0.0.1', 'stock')
+    mongo=MongoHelper('stock')
     date="20190810"
     collection='test2'
     print(mongo.insert(collection, {"date":date, "index":234}))

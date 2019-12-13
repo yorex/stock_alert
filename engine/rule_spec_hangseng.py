@@ -12,7 +12,7 @@ import mongoHelper
 class SpecHangsengRule(Rule):
     def __init__(self):
         Rule.__init__(self)
-        self.mongo_helper = mongoHelper.MongoHelper('127.0.0.1', 'stock')
+        self.mongo_helper = mongoHelper.MongoHelper('stock')
 
     def name(self):
         return "spec_hangseng"

@@ -1,0 +1,18 @@
+## hangseng_index
+{
+    "_id": "5d4615a7bd70cc39f91c174e", 
+    "date": "20190411", 
+    "dopen": 30138.14, 
+    "dclose": 29839.45, 
+    "volume": 1897154200, 
+    "dmin": 29783.67, 
+    "dmax": 30184.61, 
+    "alert_warns": {
+        "spec_hangseng": [
+            "连续2降，cut 20%"
+        ]
+    }, 
+    "alert_emergs": {
+        "spec_hangseng": [ ]
+    }
+}

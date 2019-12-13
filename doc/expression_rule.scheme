@@ -1,23 +1,25 @@
 {
-"rapicDown": {
-	"duration": 7,
-	"down":[0.02, 0.01]
-},
+    "rapicDown": {
+        "duration": 7,
+        "down":[0.02, 0.01]
+    },
 
-"peakDown":{
-	"peakWidth": 30,
-	"peakHeight": 0.05,
-	"duration":7,
-	"down":[0.01, 0.01]
-},
+    "peakDown":{
+        "peak":{"Width": 30, "Height": 0.05},
+        "duration":7,
+        "down":[0.01, 0.01]
+    },
 
-"continueDown":{
-	"continueDown":[0.005, 0.005, 0.005]
-},
+    "continueDown":{
+        "continueDown":[0.005, 0.005, 0.005]
+    },
 
 
-"ma5ContinueDown":{
-	"seqType":"ma5",
-	"continueDown":[0.005, 0.005, 0.005]
+    "ma5ContinueDown":{
+        "seqType":"ma5",
+        "continueDown":[0.005, 0.005, 0.005]
+    }
 }
-}
+
+duration/peak_width -> default/seqType -> down/continueDown[peak_height]
+filter -> transform -> judge -> output

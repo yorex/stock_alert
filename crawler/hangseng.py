@@ -22,7 +22,7 @@ class HangsengIndex:
         self.html = ""
         self.indexs = {}
         self.date = datetime.date.today().strftime("%Y%m%d")
-        self.mongo_helper = MongoHelper("127.0.0.1", "stock")
+        self.mongo_helper = MongoHelper("stock")
 
     def curl_hangseng_index_sina_simple(self):
         url = "http://hq.sinajs.cn/list=int_hangseng"

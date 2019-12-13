@@ -18,7 +18,7 @@ def getYesterday():
 
 class AlertSummary:
     def __init__(self, date=None):
-        self.mongo_helper = MongoHelper("127.0.0.1", "stock")
+        self.mongo_helper = MongoHelper("stock")
         if date:
             self.date = date
         else:

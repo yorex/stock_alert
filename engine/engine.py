@@ -17,7 +17,7 @@ class RuleEngine:
     def inspect(self, force=False):
         for rule in self.rules:
             try:
-                alert = rule.inspect(force)
+                rule.inspect(force)
             except Exception as e:
                 logger.error("rule(%s) exception(%s)", str(rule), traceback.format_exc())
 
