@@ -3,7 +3,7 @@ import sys
 import logger
 from abc import ABCMeta,abstractmethod
 
-class Rule:
+class Transformer:
     __metaclass__ = ABCMeta
 
     def __init__(self):
@@ -11,9 +11,5 @@ class Rule:
 
     @abstractmethod
     def transform(self):
-        pass
-
-    @abstractmethod
-    def name(self):
         pass
 

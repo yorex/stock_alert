@@ -7,13 +7,8 @@ class Filter:
     __metaclass__ = ABCMeta
 
     def __init__(self):
-        pass
+        self.size = 0
 
     @abstractmethod
-    def filter(self):
+    def filte(self):
         pass
-
-    @abstractmethod
-    def name(self):
-        pass
-

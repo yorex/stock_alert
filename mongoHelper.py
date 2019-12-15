@@ -79,11 +79,13 @@ class MongoHelper:
             logger.error("mongo is not inited, remove fail")
 
     # sort ascending by key:date
-    def find(self, collectionName, query):
+    def find(self, collectionName, query, limit=300):
         collection = self.db[collectionName]
         if collection:
             cursor = collection.find(query).sort("date", pymongo.ASCENDING)
-            datas = [d for d in cursor]
+            count = cursor.count()
+            limit = limit if limit < count else count;
+            datas = [d for d in cursor.skip(count-limit).limit(limit)]
             cursor.close()
             return datas 
         else:

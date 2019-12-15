@@ -1,4 +1,5 @@
 import sys
+import datetime
 
 def compare_array(ax, ay):
     if len(ax) != len(ay):
@@ -12,3 +13,13 @@ def compare_array(ax, ay):
         elif ax[i] != ay[i]:
             return False
     return True
+
+def getYesterday():
+    today=datetime.date.today()
+    oneday=datetime.timedelta(days=1)
+    yesterday=today-oneday
+    return yesterday.strftime("%Y%m%d")
+
+def getToday():
+    today=datetime.date.today()
+    return today.strftime("%Y%m%d")

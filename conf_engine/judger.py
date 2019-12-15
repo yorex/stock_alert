@@ -13,7 +13,3 @@ class Judger:
     def judge(self):
         pass
 
-    @abstractmethod
-    def name(self):
-        pass
-
