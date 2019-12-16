@@ -44,19 +44,21 @@ class DownJudger(Judger):
 
 
 if __name__ == '__main__':
-    origin_datas = [13,17,15,16,13,10,11,9,8]
+    origin_datas = [27547.3, 27683.4, 27688.64, 27847.23, 27651.14, 26926.55, 27065.28, 26571.46, 26323.69, 26326.66, 
+                    26681.09, 27093.8, 26889.61, 26466.88, 26595.08, 26993.04, 26913.92, 26954.0, 26893.73, 26346.49, 
+                    26444.72, 26391.3, 26062.56, 26217.04, 26498.37, 26494.73, 26436.62, 26645.43, 26994.14, 27687.76]
     percent_datas = toPercent(origin_datas)
     print "origin_datas:", origin_datas
     print "percent_datas:", percent_datas
 
-    judger1 = DownJudger("warning", [0.01, 0.02, 0.01], False, None)
+    judger1 = DownJudger([0.01, 0.02, 0.01], False, None)
     assert judger1.judge(origin_datas, percent_datas)
 
-    judger2 = DownJudger("warning", [0.01, 0.02, 0.01], True, None)
-    assert not judger2.judge(origin_datas, percent_datas)
+    judger2 = DownJudger([0.01, 0.02, 0.01], True, None)
+    assert judger2.judge(origin_datas, percent_datas)
     
-    judger3 = DownJudger("warning", [0.01, 0.02], True, 0.05)
-    assert not judger3.judge(origin_datas, percent_datas)
+    judger3 = DownJudger([0.01, 0.02], True, 0.05)
+    assert judger3.judge(origin_datas, percent_datas)
     
     print "all test pass"
 

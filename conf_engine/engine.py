@@ -8,7 +8,7 @@ from mongoHelper import MongoHelper
 from filter_duration import DurationFilter
 from transformer_percent import PercentTransformer
 from judger_down import DownJudger
-from utils import getToday
+from utils import getToday, getYesterday
 import json
 
 class RuleChain:
@@ -18,10 +18,10 @@ class RuleChain:
     def parseFilter(self, rule):
         size = 30
         if rule.has_key('duration'):
-            size = rule['duration']
+            size = max(size, rule['duration'])
         if rule.has_key('peak'):
             assert rule['peak'].has_key('width')
-            size = rule['peak']['width']
+            size = max(size, rule['peak']['width'])
         self.filter = DurationFilter(size)
 
     def parseTransformer(self, rule):
@@ -63,34 +63,35 @@ class RuleEngine:
             rule_chain.parseFilter(rule)
             rule_chain.parseTransformer(rule)
             rule_chain.parseJudger(rule)
+            rule_chain.parseWarnContent(rule)
             self.chains.append(rule_chain)
 
         assert conf.has_key('subjects') and isinstance(conf['subjects'], list);
         self.subjects = conf['subjects'];
 
-    def run_for_date(self, date=getToday()):
+    def run_for_date(self, date=getYesterday()):
 
-        datas_len = max([chain.filter.size for chain in self.chains])
+        #datas_len = max([chain.filter.size for chain in self.chains])
         
         for subject in self.subjects:
-            datas = self._readData(subject, date, datas_len)
             for chain in self.chains:
                 try:
+                    datas_len = chain.filter.size;
+                    datas = self._readData(subject, date, datas_len)
                     datas_filted = chain.filter.filte(datas)
                     datas_transformed = chain.transformer.transform(datas_filted)
-                    warn = chain.judger.judge(datas, datas_transformed)
-                    # date 对应的数据记录
-                    cur_data = datas[-1]
-                    assert cur_data["date"] == date
-                    cur_data.setdefault("warn", {})[chain.name] = warn
-                    mongo.update(subject, {"_id":cur_data["_id"]}, cur_data)
-                    logger.info("chain(%s) -> warn(%s)", chain.name)
+                    if chain.judger.judge(datas_filted, datas_transformed):
+                        # date 对应的数据记录
+                        cur_data = datas[-1]
+                        cur_data.setdefault("warn", {})[chain.name] = chain.warn
+                        self.mongo.update(subject, {"_id":cur_data["_id"]}, cur_data)
+                        logger.info("chain(%s) -> warn(%s)", chain.name, chain.warn)
                 except Exception as e:
                     logger.error("rule(%s) exception(%s)", chain.name, traceback.format_exc())
 
     def _readData(self, collection, date, limit):
         datas = self.mongo.find(collection, {"date":{"$lte":date}}, limit)
-        logger.info_print("data: %s", datas)
+#        logger.info_print("data: %s", datas)
         return datas
 
 
