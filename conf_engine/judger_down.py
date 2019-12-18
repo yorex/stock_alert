@@ -27,19 +27,24 @@ class DownJudger(Judger):
             peak_min = max(origin_datas)*(1.0-self.peak_percent)
         # steps point
         sp=0
+        hit_points=[]
         for i in range(len(origin_datas)) :
             # 超出peak，step匹配重来
             if peak_min and origin_datas[i] < peak_min:
                 sp = 0
+                hit_points=[]
                 continue
-            if percent_datas[i] <= self.steps[sp]:
+            if percent_datas[i] < 0 and abs(percent_datas[i]) >= self.steps[sp]:
                 sp += 1
+                # 收集负坐标
+                hit_points.append(i - len(origin_datas))
             else:
                 if self.is_continue:
+                    hit_points=[]
                     sp = 0
                     
             if sp == len(self.steps):
-                return True
+                return hit_points
         return False
 
 

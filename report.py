@@ -34,6 +34,8 @@ class AlertSummary:
                 collcont[collection+"-"+ALERT_EMERGS] = hangseng_data[ALERT_EMERGS]
             if hangseng_data.has_key(ALERT_WARNS):
                 collcont[collection+"-"+ALERT_WARNS] = hangseng_data[ALERT_WARNS]
+            if hangseng_data.has_key("warn"):
+                collcont[collection+"-warn"] = hangseng_data["warn"]
             content.append(collcont)
         return content
 

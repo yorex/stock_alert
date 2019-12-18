@@ -9,7 +9,7 @@ class DurationFilter(Filter):
 
     def filte(self, datas):
         assert isinstance(datas, list)
-        datas_filted =  datas[0:self.size]
+        datas_filted =  datas[-self.size:]
         #dates = [ data['date'] for data in datas_filted]
         return [ data['dclose'] for data in datas_filted]
 

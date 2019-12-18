@@ -16,12 +16,13 @@ class RuleChain:
         self.name = name;
        
     def parseFilter(self, rule):
-        size = 30
+        size = 0 
         if rule.has_key('duration'):
             size = max(size, rule['duration'])
         if rule.has_key('peak'):
             assert rule['peak'].has_key('width')
             size = max(size, rule['peak']['width'])
+        size = 30 if size == 0 else size
         self.filter = DurationFilter(size)
 
     def parseTransformer(self, rule):
@@ -71,21 +72,23 @@ class RuleEngine:
 
     def run_for_date(self, date=getYesterday()):
 
-        #datas_len = max([chain.filter.size for chain in self.chains])
+        datas_len = max([chain.filter.size for chain in self.chains])
         
         for subject in self.subjects:
+            datas = self._readData(subject, date, datas_len)
             for chain in self.chains:
                 try:
-                    datas_len = chain.filter.size;
-                    datas = self._readData(subject, date, datas_len)
                     datas_filted = chain.filter.filte(datas)
+                    #logger.info("datas_filted: %s", datas_filted)
                     datas_transformed = chain.transformer.transform(datas_filted)
-                    if chain.judger.judge(datas_filted, datas_transformed):
+                    hit_points = chain.judger.judge(datas_filted, datas_transformed)
+                    if hit_points:
                         # date 对应的数据记录
                         cur_data = datas[-1]
                         cur_data.setdefault("warn", {})[chain.name] = chain.warn
                         self.mongo.update(subject, {"_id":cur_data["_id"]}, cur_data)
-                        logger.info("chain(%s) -> warn(%s)", chain.name, chain.warn)
+                        logger.info("chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)", 
+                            chain.name, chain.warn, hit_points, [datas_filted[i] for i in hit_points])
                 except Exception as e:
                     logger.error("rule(%s) exception(%s)", chain.name, traceback.format_exc())
 
