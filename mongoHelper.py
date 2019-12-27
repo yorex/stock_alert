@@ -90,6 +90,11 @@ class MongoHelper:
             return datas 
         else:
             logger.error("mongo is not inited, remove fail")
+
+    def drop(self, collectionName):
+        if collectionName:
+            self.db.drop_collection(collectionName)
+            logger.warn("drop collection: " + collectionName)
     
 
 if __name__ == '__main__':

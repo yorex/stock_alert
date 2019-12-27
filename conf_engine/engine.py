@@ -47,6 +47,7 @@ class RuleChain:
         assert rule.has_key('warn')
         self.warn = rule['warn']
 
+
 class RuleEngine:
     def __init__(self):
         self.chains = []
@@ -87,15 +88,19 @@ class RuleEngine:
                         cur_data = datas[-1]
                         cur_data.setdefault("warn", {})[chain.name] = chain.warn
                         self.mongo.update(subject, {"_id":cur_data["_id"]}, cur_data)
-                        logger.info("chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)", 
-                            chain.name, chain.warn, hit_points, [datas_filted[i] for i in hit_points])
+                        logger.info("subject(%s) chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)", 
+                            subject, chain.name, chain.warn, hit_points, [datas_filted[i] for i in hit_points])
                 except Exception as e:
-                    logger.error("rule(%s) exception(%s)", chain.name, traceback.format_exc())
+                    logger.error("rule(%s) for subject(%s) exception(%s)", chain.name, subject, traceback.format_exc())
 
     def _readData(self, collection, date, limit):
+        collection = self.get_collection_name(collection)
         datas = self.mongo.find(collection, {"date":{"$lte":date}}, limit)
 #        logger.info_print("data: %s", datas)
         return datas
+
+    def get_collection_name(self, subject):
+        return "c%s" % subject.replace(".", "")
 
 
 if __name__ == "__main__":

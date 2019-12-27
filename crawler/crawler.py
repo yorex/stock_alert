@@ -24,27 +24,30 @@ class YahooCrawler:
     def to_float(self, s):
         return float(s.replace(",", ""))
 
-    def removeDotHK(self, subject):
-        return subject.split(".")[0]
+    def get_collection_name(self, subject):
+        return "c%s" % subject.replace(".", "")
 
     def _save_data(self, subject, datas):
-        logger.info("save_data:%s", datas)
-        date= time.strftime("%Y%m%d", time.strptime(datas[0].encode("utf-8"), "%Y年%m月%d日"))
-        dopen = self.to_float(datas[1])
-        dmax = self.to_float(datas[2])
-        dmin = self.to_float(datas[3])
-        dclose = self.to_float(datas[4])
-        volume = self.to_float(datas[5])
-        data={
-            "date":date, 
-            "dopen":dopen, 
-            "dmax":dmax, 
-            "dmin":dmin, 
-            "dclose":dclose, 
-            "volume":volume
-        }
-        collectionName = self.removeDotHK(subject)
-        self.mongo.update(collectionName, {"date":date}, data, True)
+        try:
+            logger.info("save_data:%s", datas)
+            date= time.strftime("%Y%m%d", time.strptime(datas[0].encode("utf-8"), "%Y年%m月%d日"))
+            dopen = self.to_float(datas[1])
+            dmax = self.to_float(datas[2])
+            dmin = self.to_float(datas[3])
+            dclose = self.to_float(datas[4])
+            volume = self.to_float(datas[5])
+            data={
+                "date":date, 
+                "dopen":dopen, 
+                "dmax":dmax, 
+                "dmin":dmin, 
+                "dclose":dclose, 
+                "volume":volume
+            }
+            collectionName = self.get_collection_name(subject)
+            self.mongo.update(collectionName, {"date":date}, data, False)
+        except Exception as e:
+            logger.error("save_data exception:%s", str(e))
     
     # 获取 [date_begin, date_end) 内的数据, date格式为%Y%m%d
     def fetch(self, subject, date_begin, date_end):
@@ -61,13 +64,16 @@ class YahooCrawler:
 
 if __name__ == "__main__":
     today = datetime.date.today()
-    oneday = datetime.timedelta(days=1)
+    oneday = datetime.timedelta(days=3)
     yesterday = today - oneday
     tomorrow = today + oneday
     
     for subject in  open("subjects.conf", "r"): 
-        yahooCrawler = YahooCrawler();
-        yahooCrawler.fetch(subject.strip(), yesterday.strftime("%Y%m%d"), tomorrow.strftime("%Y%m%d"));
-        del yahooCrawler
+        try:
+            yahooCrawler = YahooCrawler();
+            yahooCrawler.fetch(subject.strip(), yesterday.strftime("%Y%m%d"), tomorrow.strftime("%Y%m%d"));
+            del yahooCrawler
+        except Exception as e:
+            logger.error("process subject(%s) exception:%s", subject, str(e))
 
  

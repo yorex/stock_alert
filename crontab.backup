@@ -1,0 +1,17 @@
+#30 21 * * *    表示每晚的21:30 
+#45 4 1,10,22 * * 表示每月1、10、22日的4 : 45
+#10 1 * * 6,0 表示每周六、周日的1 : 10
+#0,30 18-23 * * * 表示在每天18 : 00至23 : 00之间每隔30分钟
+#0 23 * * 6 表示每星期六的11 : 00 pm
+#* */1 * * * 每一小时
+#* 24-7/1 * * * 晚上11点到早上7点之间，每隔一小时
+#* 8,13 * * 1-5 从周一到周五的上午8点和下午1点
+#0 11 4 * mon-wed 每月的4号与每周一到周三的11点
+#0 4 1 jan * 一月一号的4点
+
+13 07 * * 1-5 cd /home/admin/stock_alert && python crawler/hangseng.py >> /home/admin/stock_alert/cron.log 2>&1
+15 07 * * 1-5 cd /home/admin/stock_alert/crawler && python crawler.py >> /home/admin/stock_alert/cron.log 2>&1
+23 07 * * 1-5 cd /home/admin/stock_alert && python engine/engine.py >> /home/admin/stock_alert/cron.log 2>&1
+25 07 * * 1-5 cd /home/admin/stock_alert/conf_engine && python engine.py >> /home/admin/stock_alert/cron.log 2>&1
+30 08 * * 1-5 cd /home/admin/stock_alert && python report.py >> /home/admin/stock_alert/cron.log 2>&1
+
