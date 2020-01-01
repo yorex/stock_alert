@@ -25,7 +25,7 @@ class YahooCrawler:
         return float(s.replace(",", ""))
 
     def get_collection_name(self, subject):
-        return "c%s" % subject.replace(".", "")
+        return "c%s" % subject.replace(".", "").strip()
 
     def _save_data(self, subject, datas):
         try:
@@ -45,7 +45,9 @@ class YahooCrawler:
                 "volume":volume
             }
             collectionName = self.get_collection_name(subject)
-            self.mongo.update(collectionName, {"date":date}, data, False)
+            if self.mongo.find(collectionName, {"date": date}).count() == 0:
+                self.mongo.insert(collectionName, data)
+                #self.mongo.update(collectionName, {"date":date}, data, True)
         except Exception as e:
             logger.error("save_data exception:%s", str(e))
     
@@ -64,11 +66,11 @@ class YahooCrawler:
 
 if __name__ == "__main__":
     today = datetime.date.today()
-    oneday = datetime.timedelta(days=3)
+    oneday = datetime.timedelta(days=30)
     yesterday = today - oneday
     tomorrow = today + oneday
     
-    for subject in  open("subjects.conf", "r"): 
+    for subject in  open("../config/subjects.conf", "r"): 
         try:
             yahooCrawler = YahooCrawler();
             yahooCrawler.fetch(subject.strip(), yesterday.strftime("%Y%m%d"), tomorrow.strftime("%Y%m%d"));

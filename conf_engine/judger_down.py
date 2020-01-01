@@ -21,6 +21,7 @@ class DownJudger(Judger):
         assert isinstance(origin_datas, list)
         assert isinstance(percent_datas, list)
         assert len(origin_datas) == len(percent_datas);
+        assert len(origin_datas) > 0; 
         # get peak_min
         peak_min = None
         if self.peak_percent:

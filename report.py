@@ -24,6 +24,9 @@ class AlertSummary:
         else:
             self.date = getYesterday()
         self.collections = ["hangseng_index"]
+        for subject in  open("config/subjects.conf", "r"): 
+            subject="c%s" % subject.replace(".", "").strip()
+            self.collections.append(subject)
 
     def generateSummary(self):
         content = [self.date]
@@ -36,7 +39,8 @@ class AlertSummary:
                 collcont[collection+"-"+ALERT_WARNS] = hangseng_data[ALERT_WARNS]
             if hangseng_data.has_key("warn"):
                 collcont[collection+"-warn"] = hangseng_data["warn"]
-            content.append(collcont)
+            if collcont:
+                content.append(collcont)
         return content
 
 

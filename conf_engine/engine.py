@@ -54,7 +54,7 @@ class RuleEngine:
         self.subjects = []
         self.mongo= MongoHelper("stock")
 
-    def load(self, conf_pathfile):
+    def load(self, conf_pathfile, subjects_pathfile):
         with open(conf_pathfile, "r") as f:
             conf = json.load(f)
         assert conf.has_key('rules')
@@ -68,14 +68,15 @@ class RuleEngine:
             rule_chain.parseWarnContent(rule)
             self.chains.append(rule_chain)
 
-        assert conf.has_key('subjects') and isinstance(conf['subjects'], list);
-        self.subjects = conf['subjects'];
+        for subject in  open(subjects_pathfile, "r"): 
+            self.subjects.append(subject)
 
     def run_for_date(self, date=getYesterday()):
 
         datas_len = max([chain.filter.size for chain in self.chains])
         
         for subject in self.subjects:
+            subject = self.get_collection_name(subject)
             datas = self._readData(subject, date, datas_len)
             for chain in self.chains:
                 try:
@@ -94,16 +95,15 @@ class RuleEngine:
                     logger.error("rule(%s) for subject(%s) exception(%s)", chain.name, subject, traceback.format_exc())
 
     def _readData(self, collection, date, limit):
-        collection = self.get_collection_name(collection)
         datas = self.mongo.find(collection, {"date":{"$lte":date}}, limit)
-#        logger.info_print("data: %s", datas)
+        #logger.info_print("data: %s", datas)
         return datas
 
     def get_collection_name(self, subject):
-        return "c%s" % subject.replace(".", "")
+        return "c%s" % subject.replace(".", "").strip()
 
 
 if __name__ == "__main__":
     ruleEngine = RuleEngine()
-    ruleEngine.load("rules.conf")
+    ruleEngine.load("../config/rules.conf", "../config/subjects.conf")
     ruleEngine.run_for_date()

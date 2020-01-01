@@ -64,6 +64,8 @@ class MongoHelper:
         else:
             logger.error("mongo is not inited, insert fail")
     
+    # 仅修改data中存在的key，原纪录中其他key的值不会被变更
+    # isUpsert为True时，当query不到纪录时会插入一条新的
     def update(self, collectionName, query, data, isUpsert=True):
         collection = self.db[collectionName]
         if collection:
@@ -89,7 +91,7 @@ class MongoHelper:
             cursor.close()
             return datas 
         else:
-            logger.error("mongo is not inited, remove fail")
+            logger.error("mongo is not inited, find fail")
 
     def drop(self, collectionName):
         if collectionName:
