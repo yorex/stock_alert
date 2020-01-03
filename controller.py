@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from flask import Flask
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -99,6 +101,10 @@ def report():
     alert_summart = AlertSummary(date)
     return jsonify(alert_summart.generateSummary())
 
+@app.route('/test')
+def test():
+    s="数据量附近kjfls计算量凡士林是"
+    return jsonify(s.decode("utf-8"))
 
 @app.route('/stock')
 def stock():

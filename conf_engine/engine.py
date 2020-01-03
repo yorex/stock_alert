@@ -8,7 +8,7 @@ from mongoHelper import MongoHelper
 from filter_duration import DurationFilter
 from transformer_percent import PercentTransformer
 from judger_down import DownJudger
-from utils import getToday, getYesterday
+from utils import getToday, getYesterday, parseConfigSubject
 import json
 
 class RuleChain:
@@ -68,15 +68,14 @@ class RuleEngine:
             rule_chain.parseWarnContent(rule)
             self.chains.append(rule_chain)
 
-        for subject in  open(subjects_pathfile, "r"): 
-            self.subjects.append(subject)
+        for subject in parseConfigSubject(subjects_pathfile):
+            self.subjects.append(subject["fcode"])
 
     def run_for_date(self, date=getYesterday()):
 
         datas_len = max([chain.filter.size for chain in self.chains])
         
         for subject in self.subjects:
-            subject = self.get_collection_name(subject)
             datas = self._readData(subject, date, datas_len)
             for chain in self.chains:
                 try:

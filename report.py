@@ -5,6 +5,7 @@ import json
 import sys
 import datetime
 import logger
+from utils import parseConfigSubject
 
 ALERT_WARNS="alert_warns"
 ALERT_EMERGS="alert_emergs"
@@ -24,9 +25,9 @@ class AlertSummary:
         else:
             self.date = getYesterday()
         self.collections = ["hangseng_index"]
-        for subject in  open("config/subjects.conf", "r"): 
-            subject="c%s" % subject.replace(".", "").strip()
-            self.collections.append(subject)
+        self.subjects = []
+        for subject in parseConfigSubject("config/subjects.conf"):
+            self.subjects.append(subject)
 
     def generateSummary(self):
         content = [self.date]
@@ -37,8 +38,13 @@ class AlertSummary:
                 collcont[collection+"-"+ALERT_EMERGS] = hangseng_data[ALERT_EMERGS]
             if hangseng_data.has_key(ALERT_WARNS):
                 collcont[collection+"-"+ALERT_WARNS] = hangseng_data[ALERT_WARNS]
-            if hangseng_data.has_key("warn"):
-                collcont[collection+"-warn"] = hangseng_data["warn"]
+            if collcont:
+                content.append(collcont)
+        for subject in self.subjects:
+            collcont =  {}
+            data = self.readData(subject['fcode'])
+            if data.has_key("warn"):
+                collcont[subject['name']+"-warn"] = data["warn"]
             if collcont:
                 content.append(collcont)
         return content

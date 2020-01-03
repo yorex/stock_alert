@@ -23,3 +23,21 @@ def getYesterday():
 def getToday():
     today=datetime.date.today()
     return today.strftime("%Y%m%d")
+
+
+def parseConfigSubject(subject_pathfile):
+    config = []
+    for subject in open(subject_pathfile, "r"):
+        items = subject.split()
+        if len(items) >= 2:
+            code, name = items
+        if len(items) == 1:
+            code = name = items[0]
+        formalCode = "c%s" % code.replace(".", "").strip()
+        config.append({"code":code, "fcode":formalCode, "name":name.decode("utf-8")})
+    return config
+
+if __name__ == '__main__':
+    for tuples in parseConfigSubject("config/subjects.conf"):
+        print tuples["code"], tuples["fcode"], tuples["name"]
+    
