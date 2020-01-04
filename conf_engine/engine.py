@@ -11,19 +11,22 @@ from judger_down import DownJudger
 from utils import getToday, getYesterday, parseConfigSubject
 import json
 
+DRY_RUN=True
+DEBUG=False
+
 class RuleChain:
     def __init__(self, name):
         self.name = name;
        
     def parseFilter(self, rule):
-        size = 0 
+        duration = 30 
+        peakWidth = 30
         if rule.has_key('duration'):
-            size = max(size, rule['duration'])
+            duration = min(duration, rule['duration'])
         if rule.has_key('peak'):
             assert rule['peak'].has_key('width')
-            size = max(size, rule['peak']['width'])
-        size = 30 if size == 0 else size
-        self.filter = DurationFilter(size)
+            peakWidth = min(peakWidth, rule['peak']['width'])
+        self.filter = DurationFilter(duration, peakWidth)
 
     def parseTransformer(self, rule):
         self.transformer = PercentTransformer();
@@ -53,6 +56,7 @@ class RuleEngine:
         self.chains = []
         self.subjects = []
         self.mongo= MongoHelper("stock")
+        self.dryRun=DRY_RUN
 
     def load(self, conf_pathfile, subjects_pathfile):
         with open(conf_pathfile, "r") as f:
@@ -73,25 +77,30 @@ class RuleEngine:
 
     def run_for_date(self, date=getYesterday()):
 
-        datas_len = max([chain.filter.size for chain in self.chains])
+        datas_len = max([max(chain.filter.peakWidth, chain.filter.duration) for chain in self.chains])
         
         for subject in self.subjects:
             datas = self._readData(subject, date, datas_len)
             for chain in self.chains:
                 try:
-                    datas_filted = chain.filter.filte(datas)
-                    #logger.info("datas_filted: %s", datas_filted)
+                    metas, datas_filted = chain.filter.filte(datas)
+                    if DEBUG:
+                        logger.info("chain(%s) datas_filted: %s", chain.name, datas_filted)
                     datas_transformed = chain.transformer.transform(datas_filted)
-                    hit_points = chain.judger.judge(datas_filted, datas_transformed)
+                    hit_points = chain.judger.judge(datas_filted, datas_transformed, metas)
                     if hit_points:
                         # date 对应的数据记录
                         cur_data = datas[-1]
                         cur_data.setdefault("warn", {})[chain.name] = chain.warn
-                        self.mongo.update(subject, {"_id":cur_data["_id"]}, cur_data)
-                        logger.info("subject(%s) chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)", 
-                            subject, chain.name, chain.warn, hit_points, [datas_filted[i] for i in hit_points])
+                        self._writeData(subject, {"_id":cur_data["_id"]}, cur_data)
+                        logger.info("%s date(%s) subject(%s) chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)", 
+                            "DRY-RUN" if self.dryRun else "", cur_data["date"], subject, chain.name, chain.warn, hit_points, [datas_filted[i] for i in hit_points])
                 except Exception as e:
                     logger.error("rule(%s) for subject(%s) exception(%s)", chain.name, subject, traceback.format_exc())
+    
+    def _writeData(self, collection, query, data):
+        if not self.dryRun:
+            self.mongo.update(subject, {"_id":cur_data["_id"]}, cur_data)
 
     def _readData(self, collection, date, limit):
         datas = self.mongo.find(collection, {"date":{"$lte":date}}, limit)

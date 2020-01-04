@@ -17,7 +17,7 @@ class DownJudger(Judger):
         self.is_continue = is_continue;
         self.peak_percent = peak_percent;
 
-    def judge(self, origin_datas, percent_datas):
+    def judge(self, origin_datas, percent_datas, metas):
         assert isinstance(origin_datas, list)
         assert isinstance(percent_datas, list)
         assert len(origin_datas) == len(percent_datas);
@@ -25,7 +25,8 @@ class DownJudger(Judger):
         # get peak_min
         peak_min = None
         if self.peak_percent:
-            peak_min = max(origin_datas)*(1.0-self.peak_percent)
+            assert metas and metas['peak'] > 0;
+            peak_min = metas['peak']*(1.0-self.peak_percent)
         # steps point
         sp=0
         hit_points=[]

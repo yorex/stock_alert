@@ -92,6 +92,7 @@ class MongoHelper:
             return datas 
         else:
             logger.error("mongo is not inited, find fail")
+            return []
 
     def drop(self, collectionName):
         if collectionName:

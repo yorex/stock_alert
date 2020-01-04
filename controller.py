@@ -103,8 +103,8 @@ def report():
 
 @app.route('/test')
 def test():
-    s="数据量附近kjfls计算量凡士林是"
-    return jsonify(s.decode("utf-8"))
+    s="数据量附近kjfls计算量凡\"士林是"
+    return jsonify(s.decode("utf-8").encode("gbk"))
 
 @app.route('/stock')
 def stock():

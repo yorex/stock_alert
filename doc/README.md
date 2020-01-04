@@ -14,3 +14,6 @@ curl https://intoli.com/install-google-chrome.sh | sudo bash
 google-chrome-stable --no-sandbox --headless --disable-gpu --screenshot     https://www.suning.com/
 # chromedriver
 https://chromedriver.storage.googleapis.com/index.html?path=75.0.3770.140/
+
+#lxml
+sudo yum install python-lxml.x86_64
