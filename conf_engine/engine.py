@@ -8,10 +8,11 @@ from mongoHelper import MongoHelper
 from filter_duration import DurationFilter
 from transformer_percent import PercentTransformer
 from judger_down import DownJudger
+from judger_up import UpJudger
 from utils import getToday, getYesterday, parseConfigSubject
 import json
 
-DRY_RUN=True
+DRY_RUN=False
 DEBUG=False
 
 class RuleChain:
@@ -32,19 +33,10 @@ class RuleChain:
         self.transformer = PercentTransformer();
 
     def parseJudger(self, rule):
-        downList = []
-        is_continue = False
-        peak_percent = None
-        if rule.has_key('down'):
-            downList = rule['down']
-            is_continue = False
-        if rule.has_key('continueDown'):
-            downList = rule['continueDown']
-            is_continue = True
-        if rule.has_key('peak'):
-            assert rule['peak'].has_key('height')
-            peak_percent = rule['peak']['height']
-        self.judger = DownJudger(downList, is_continue, peak_percent)
+        self.judger = DownJudger.parseDownJudger(rule)
+        if not self.judger:
+            self.judger = UpJudger.parseUpJudger(rule)
+        assert self.judger
 
     def parseWarnContent(self, rule):
         assert rule.has_key('warn')
@@ -100,7 +92,7 @@ class RuleEngine:
     
     def _writeData(self, collection, query, data):
         if not self.dryRun:
-            self.mongo.update(subject, {"_id":cur_data["_id"]}, cur_data)
+            self.mongo.update(collection, query, data)
 
     def _readData(self, collection, date, limit):
         datas = self.mongo.find(collection, {"date":{"$lte":date}}, limit)

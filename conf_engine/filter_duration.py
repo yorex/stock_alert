@@ -13,9 +13,10 @@ class DurationFilter(Filter):
         assert isinstance(datas, list)
         maxLen = max(self.duration, self.peakWidth)
         peak = max([data['dclose'] for data in datas[-maxLen:]])
+        valley = min([data['dclose'] for data in datas[-maxLen:]])
         datas_filted =  datas[-self.duration:]
         #dates = [ data['date'] for data in datas_filted]
-        return ({"peak":peak}, [ data['dclose'] for data in datas_filted])
+        return ({"peak":peak, "valley":valley}, [ data['dclose'] for data in datas_filted])
 
 
 if __name__ == '__main__':
