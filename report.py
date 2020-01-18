@@ -7,6 +7,8 @@ import datetime
 import logger
 from utils import parseConfigSubject
 
+DEBUG=False
+
 ALERT_WARNS="alert_warns"
 ALERT_EMERGS="alert_emergs"
 
@@ -20,14 +22,15 @@ def getYesterday():
 class AlertSummary:
     def __init__(self, date=None):
         self.mongo_helper = MongoHelper("stock")
-        if date:
-            self.date = date
-        else:
-            self.date = getYesterday()
         self.collections = ["hangseng_index"]
         self.subjects = []
         for subject in parseConfigSubject("config/subjects.conf"):
             self.subjects.append(subject)
+
+        if date:
+            self.date = date
+        else:
+            self.date = self.getLatestDataDay(getYesterday())
 
     def generateSummary(self):
         content = [self.date]
@@ -47,8 +50,30 @@ class AlertSummary:
                 collcont[subject['name']+"-warn"] = data["warn"]
             if collcont:
                 content.append(collcont)
+#            return subject['name'].encode("gbk")
+#        return json.loads(json.dumps(content).encode("gbk"), encoding="gbk")
         return content
-
+    
+    def getEvents(self):
+        events = [];
+        for collection in self.collections:
+            hangseng_data = self.readData(collection)
+            if hangseng_data.has_key(ALERT_EMERGS):
+                for alert in hangseng_data[ALERT_EMERGS]:
+                    if len(hangseng_data[ALERT_EMERGS][alert]) > 0:
+                        events.append("hangseng_emerg") 
+                        break;
+            elif hangseng_data.has_key(ALERT_WARNS):
+                for alert in hangseng_data[ALERT_WARNS]:
+                    if len(hangseng_data[ALERT_WARNS][alert]) > 0:
+                        events.append("hangseng_warn") 
+                        break;
+        for subject in self.subjects:
+            data = self.readData(subject['fcode'])
+            if data.has_key("warn"):
+                events.append(subject['name'])
+        return events
+ 
 
     def getScore(self):
         score = 0
@@ -67,19 +92,24 @@ class AlertSummary:
 
     def readData(self, collection):
         hangseng_datas = self.mongo_helper.find(collection, {"date":self.date})
-        logger.info_print("data: %s", hangseng_datas)
+        if DEBUG:
+            logger.info_print("data: %s", hangseng_datas)
         if hangseng_datas:
             return hangseng_datas[0]
         else:
             return {}
 
+    def getLatestDataDay(self, date):
+        datas = self.mongo_helper.find(self.collections[0], {"date":{"$lte":date}})
+        return datas[-1]["date"]
+
 if __name__ == "__main__":
-    date = getYesterday()
+    date = None
     if len(sys.argv) > 1:
         date = sys.argv[1]
 #    date='20190828'
     alert_summary = AlertSummary(date)
-    score = alert_summary.getScore() 
+    events = alert_summary.getEvents() 
     dingtalker = DingTalkSender()
-    dingtalker.sendText("%d %s?date=%s" % (score, "http://47.103.104.36/report", date))
+    dingtalker.sendText("%d %s %s?date=%s" % (len(events), str(events), "http://47.103.104.36/report", alert_summary.date))
     alert_summary.generateSummary()
