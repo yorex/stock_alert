@@ -81,6 +81,7 @@ class RuleEngine:
     def run_for_date(self, date=getYesterday()):
 
         datas_len = max([max(chain.filter.peakWidth, chain.filter.duration) for chain in self.chains])
+        all_warns_ret = []
         
         for subject in self.subjects:
             datas = self._readData(subject, date, datas_len)
@@ -104,10 +105,12 @@ class RuleEngine:
                             warn += "@" + custom_warn
                         cur_data.setdefault("warn", {})[chain.name] = warn
                         self._writeData(subject, {"_id":cur_data["_id"]}, cur_data)
-                        logger.info("%s date(%s) subject(%s) chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)", 
-                            "DRY-RUN" if self.dryRun else "", cur_data["date"], subject, chain.name, warn, hit_points, [datas_filted[i] for i in hit_points])
+                        record = "%s date(%s) subject(%s) chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)" % ("DRY-RUN" if self.dryRun else "", cur_data["date"], subject, chain.name, warn, hit_points, [datas_filted[i] for i in hit_points])
+                        logger.info(record)
+                        all_warns_ret.append(record)
                 except Exception as e:
                     logger.error("rule(%s) for subject(%s) exception(%s)", chain.name, subject, traceback.format_exc())
+        return all_warns_ret
 
     def _get_custom_warn(self, subject, chain_name, date):
         if len(self.custom_warns) > 0:

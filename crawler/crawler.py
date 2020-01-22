@@ -11,6 +11,7 @@ from utils import parseConfigSubject
 import logger
 import urllib
 from lxml import etree
+import sys
 
 
 class YahooCrawler:
@@ -99,8 +100,14 @@ if __name__ == "__main__":
     oneday = datetime.timedelta(days=30)
     yesterday = today - oneday
     tomorrow = today + oneday
+
+    subjects=[]
+    if len(sys.argv) > 1:
+        subjects = parseConfigSubject("../config/subjects_rt.conf")
+    else:
+        subjects = parseConfigSubject("../config/subjects.conf")
     
-    for subject in parseConfigSubject("../config/subjects.conf"):
+    for subject in subjects:
         try:
             yahooCrawler = YahooCrawler();
             yahooCrawler.fetch(subject, yesterday.strftime("%Y%m%d"), tomorrow.strftime("%Y%m%d"));

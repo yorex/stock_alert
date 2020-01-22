@@ -23,7 +23,7 @@ def getYesterday():
 class AlertSummary:
     def __init__(self, date=None):
         self.mongo_helper = MongoHelper("stock")
-        self.collections = ["hangseng_index"]
+#        self.collections = ["hangseng_index"]
         self.subjects = []
         for subject in parseConfigSubject("config/subjects.conf"):
             self.subjects.append(subject)
@@ -36,15 +36,15 @@ class AlertSummary:
     def generateSummary(self):
         stringer = ToString("gbk")
         content = [self.date]
-        for collection in self.collections:
-            collcont =  {}
-            hangseng_data = self.readData(collection)
-            if hangseng_data.has_key(ALERT_EMERGS):
-                collcont[collection+"-"+ALERT_EMERGS] = hangseng_data[ALERT_EMERGS]
-            if hangseng_data.has_key(ALERT_WARNS):
-                collcont[collection+"-"+ALERT_WARNS] = hangseng_data[ALERT_WARNS]
-            if collcont:
-                content.append(collcont)
+#        for collection in self.collections:
+#            collcont =  {}
+#            hangseng_data = self.readData(collection)
+#            if hangseng_data.has_key(ALERT_EMERGS):
+#                collcont[collection+"-"+ALERT_EMERGS] = hangseng_data[ALERT_EMERGS]
+#            if hangseng_data.has_key(ALERT_WARNS):
+#                collcont[collection+"-"+ALERT_WARNS] = hangseng_data[ALERT_WARNS]
+#            if collcont:
+#                content.append(collcont)
         for subject in self.subjects:
             collcont =  {}
             data = self.readData(subject['fcode'])
