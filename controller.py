@@ -17,7 +17,6 @@ from report import AlertSummary
 
 mahelper = helper.MaHelper()
 
-
 ##
 # data format:
 #   {
@@ -100,6 +99,26 @@ def report():
     date=request.args.get("date")
     alert_summart = AlertSummary(date)
     return jsonify(alert_summart.generateSummary())
+#    return alert_summart.generateSummary()
+
+@app.route('/zh')
+def zh():
+    s1='''
+<html lang="zh" xml:lang="zh" xmlns="http://www.w3.org/1999/xhtml xmlns:web="http://schemas.live.com/Web/>
+    <head>
+        <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    </head>
+    <body>
+        <pre style="word-wrap: break-word; white-space: pre-wrap;">
+'''
+    s2='''
+        </pre>
+    </body>
+</html>
+'''
+    date=request.args.get("date")
+    alert_summart = AlertSummary(date)
+    return s1 + alert_summart.generateSummary() + s2
 
 @app.route('/test')
 def test():

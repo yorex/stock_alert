@@ -6,6 +6,7 @@ import sys
 import datetime
 import logger
 from utils import parseConfigSubject
+from to_string import ToString
 
 DEBUG=False
 
@@ -33,6 +34,7 @@ class AlertSummary:
             self.date = self.getLatestDataDay(getYesterday())
 
     def generateSummary(self):
+        stringer = ToString("gbk")
         content = [self.date]
         for collection in self.collections:
             collcont =  {}
@@ -50,8 +52,12 @@ class AlertSummary:
                 collcont[subject['name']+"-warn"] = data["warn"]
             if collcont:
                 content.append(collcont)
-#            return subject['name'].encode("gbk")
-#        return json.loads(json.dumps(content).encode("gbk"), encoding="gbk")
+        # ok
+        #return stringer.toString(content)
+
+        ## not work
+        #return json.dumps(content, ensure_ascii=False, indent=4, encoding="gbk")
+
         return content
     
     def getEvents(self):
@@ -112,4 +118,4 @@ if __name__ == "__main__":
     events = alert_summary.getEvents() 
     dingtalker = DingTalkSender()
     dingtalker.sendText("%d %s %s?date=%s" % (len(events), str(events), "http://47.103.104.36/report", alert_summary.date))
-    alert_summary.generateSummary()
+    print alert_summary.generateSummary()

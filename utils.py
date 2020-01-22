@@ -1,5 +1,6 @@
 import sys
 import datetime
+import json
 
 def compare_array(ax, ay):
     if len(ax) != len(ay):
@@ -24,6 +25,9 @@ def getToday():
     today=datetime.date.today()
     return today.strftime("%Y%m%d")
 
+def getFormalCode(code):
+    return "c%s" % code.replace(".", "").replace("^", "").strip()
+
 
 def parseConfigSubject(subject_pathfile):
     config = []
@@ -33,11 +37,28 @@ def parseConfigSubject(subject_pathfile):
             code, name = items
         if len(items) == 1:
             code = name = items[0]
-        formalCode = "c%s" % code.replace(".", "").strip()
+        formalCode = getFormalCode(code)
         config.append({"code":code, "fcode":formalCode, "name":name.decode("utf-8")})
     return config
+
+def parseCustomWarns(customWarns_pathfile):
+    custom_warns_list = []
+    with open(customWarns_pathfile, "r") as f:
+        custom_warns_list = json.load(f)
+        assert isinstance(custom_warns_list, list)
+
+    custom_warns = {}
+    for warn in custom_warns_list:
+        assert warn.get("subject") and warn.get("rule") and warn.get("warn")
+        warn_id = getFormalCode(warn.get("subject"))+"_"+warn.get("rule")
+        custom_warns[warn_id] = warn
+    return custom_warns
+
+
+
 
 if __name__ == '__main__':
     for tuples in parseConfigSubject("config/subjects.conf"):
         print tuples["code"], tuples["fcode"], tuples["name"]
     
+    print parseCustomWarns("config/custom_warns")

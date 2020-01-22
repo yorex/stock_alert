@@ -9,7 +9,7 @@ from filter_duration import DurationFilter
 from transformer_percent import PercentTransformer
 from judger_down import DownJudger
 from judger_up import UpJudger
-from utils import getToday, getYesterday, parseConfigSubject
+from utils import getFormalCode, getToday, getYesterday, parseConfigSubject, parseCustomWarns
 import json
 
 DRY_RUN=False
@@ -18,6 +18,7 @@ DEBUG=False
 class RuleChain:
     def __init__(self, name):
         self.name = name;
+        self.subjects = {}
        
     def parseFilter(self, rule):
         duration = 30 
@@ -41,6 +42,12 @@ class RuleChain:
     def parseWarnContent(self, rule):
         assert rule.has_key('warn')
         self.warn = rule['warn']
+    
+    def parseSubjects(self, rule):
+        if rule.has_key("subjects"):
+            assert isinstance(rule['subjects'], list)
+            for subject in rule['subjects']:
+                self.subjects[getFormalCode(subject)] = 1
 
 
 class RuleEngine:
@@ -49,8 +56,9 @@ class RuleEngine:
         self.subjects = []
         self.mongo= MongoHelper("stock")
         self.dryRun=DRY_RUN
+        self.custom_warns = {}
 
-    def load(self, conf_pathfile, subjects_pathfile):
+    def load(self, conf_pathfile, subjects_pathfile, customwarns_pathfile):
         with open(conf_pathfile, "r") as f:
             conf = json.load(f)
         assert conf.has_key('rules')
@@ -62,10 +70,13 @@ class RuleEngine:
             rule_chain.parseTransformer(rule)
             rule_chain.parseJudger(rule)
             rule_chain.parseWarnContent(rule)
+            rule_chain.parseSubjects(rule)
             self.chains.append(rule_chain)
 
         for subject in parseConfigSubject(subjects_pathfile):
             self.subjects.append(subject["fcode"])
+
+        self.custom_warns=parseCustomWarns(customwarns_pathfile);
 
     def run_for_date(self, date=getYesterday()):
 
@@ -75,6 +86,10 @@ class RuleEngine:
             datas = self._readData(subject, date, datas_len)
             for chain in self.chains:
                 try:
+                    # filte chain subject 
+                    if len(chain.subjects) > 0 and not chain.subjects.has_key(subject):
+                        continue
+
                     metas, datas_filted = chain.filter.filte(datas)
                     if DEBUG:
                         logger.info("chain(%s) datas_filted: %s", chain.name, datas_filted)
@@ -83,12 +98,29 @@ class RuleEngine:
                     if hit_points:
                         # date 对应的数据记录
                         cur_data = datas[-1]
-                        cur_data.setdefault("warn", {})[chain.name] = chain.warn
+                        warn = chain.warn
+                        custom_warn = self._get_custom_warn(subject, chain.name, date)
+                        if custom_warn:
+                            warn += "@" + custom_warn
+                        cur_data.setdefault("warn", {})[chain.name] = warn
                         self._writeData(subject, {"_id":cur_data["_id"]}, cur_data)
                         logger.info("%s date(%s) subject(%s) chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)", 
-                            "DRY-RUN" if self.dryRun else "", cur_data["date"], subject, chain.name, chain.warn, hit_points, [datas_filted[i] for i in hit_points])
+                            "DRY-RUN" if self.dryRun else "", cur_data["date"], subject, chain.name, warn, hit_points, [datas_filted[i] for i in hit_points])
                 except Exception as e:
                     logger.error("rule(%s) for subject(%s) exception(%s)", chain.name, subject, traceback.format_exc())
+
+    def _get_custom_warn(self, subject, chain_name, date):
+        if len(self.custom_warns) > 0:
+            warn_id = "%s_%s" % (subject, chain_name)
+            warn = self.custom_warns.get(warn_id)
+            monthday=date[4:]
+            if warn:
+                if warn.get("begin") and monthday < warn.get("begin"):
+                    return ""
+                if warn.get("end") and monthday > warn.get("end"):
+                    return ""
+                return warn.get("warn")
+        return ""
     
     def _writeData(self, collection, query, data):
         if not self.dryRun:
@@ -99,11 +131,8 @@ class RuleEngine:
         #logger.info_print("data: %s", datas)
         return datas
 
-    def get_collection_name(self, subject):
-        return "c%s" % subject.replace(".", "").strip()
-
 
 if __name__ == "__main__":
     ruleEngine = RuleEngine()
-    ruleEngine.load("../config/rules.conf", "../config/subjects.conf")
+    ruleEngine.load("../config/rules.conf", "../config/subjects.conf", "../config/custom_warns")
     ruleEngine.run_for_date()
