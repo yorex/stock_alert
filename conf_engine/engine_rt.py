@@ -10,5 +10,6 @@ if __name__ == "__main__":
     ruleEngine = RuleEngine()
     ruleEngine.load("../config/rules.conf", "../config/subjects_rt.conf", "../config/custom_warns")
     all_warns_ret = ruleEngine.run_for_date(getToday())
-    dingtalker = DingTalkSender()
-    dingtalker.sendText("realtime:\n %s" % all_warns_ret)
+    if all_warns_ret:
+        dingtalker = DingTalkSender()
+        dingtalker.sendText("realtime:\n %s" % all_warns_ret)

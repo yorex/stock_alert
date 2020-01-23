@@ -42,7 +42,7 @@ class DownJudger(Judger):
         assert isinstance(origin_datas, list)
         assert isinstance(percent_datas, list)
         assert len(origin_datas) == len(percent_datas);
-        assert len(origin_datas) > 0; 
+        assert len(percent_datas) > 0; 
         # get peak_min
         peak_min = None
         if self.peak_percent:
@@ -51,7 +51,7 @@ class DownJudger(Judger):
         # steps point
         sp=0
         hit_points=[]
-        for i in range(len(origin_datas)) :
+        for i in range(len(percent_datas)) :
             # 超出peak，step匹配重来
             if peak_min and origin_datas[i] < peak_min:
                 sp = 0
@@ -60,7 +60,7 @@ class DownJudger(Judger):
             if percent_datas[i] < 0 and abs(percent_datas[i]) >= self.steps[sp]:
                 sp += 1
                 # 收集负坐标
-                hit_points.append(i - len(origin_datas))
+                hit_points.append(i - len(percent_datas))
             else:
                 if self.is_continue:
                     hit_points=[]

@@ -1,6 +1,7 @@
 import sys
 import datetime
 import json
+import re
 
 def compare_array(ax, ay):
     if len(ax) != len(ay):
@@ -54,6 +55,13 @@ def parseCustomWarns(customWarns_pathfile):
         custom_warns[warn_id] = warn
     return custom_warns
 
+def parseRuleConfig(rule_pathfile):
+    with open(rule_pathfile, "r") as f:
+        s = f.read()
+        pattern=re.compile(r"#.*\n")
+        conf = re.sub(pattern, "\n", s)
+        return json.loads(conf)
+    return None
 
 
 

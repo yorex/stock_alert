@@ -9,7 +9,7 @@ from filter_duration import DurationFilter
 from transformer_percent import PercentTransformer
 from judger_down import DownJudger
 from judger_up import UpJudger
-from utils import getFormalCode, getToday, getYesterday, parseConfigSubject, parseCustomWarns
+from utils import getFormalCode, getToday, getYesterday, parseConfigSubject, parseCustomWarns, parseRuleConfig
 import json
 
 DRY_RUN=False
@@ -59,9 +59,9 @@ class RuleEngine:
         self.custom_warns = {}
 
     def load(self, conf_pathfile, subjects_pathfile, customwarns_pathfile):
-        with open(conf_pathfile, "r") as f:
-            conf = json.load(f)
-        assert conf.has_key('rules')
+        conf = parseRuleConfig(conf_pathfile)
+        assert conf and conf.has_key('rules')
+
         rule_conf = conf['rules']
         for rule_name in rule_conf.keys():
             rule = rule_conf[rule_name]
