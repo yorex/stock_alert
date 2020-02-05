@@ -62,18 +62,18 @@ class AlertSummary:
     
     def getEvents(self):
         events = [];
-        for collection in self.collections:
-            hangseng_data = self.readData(collection)
-            if hangseng_data.has_key(ALERT_EMERGS):
-                for alert in hangseng_data[ALERT_EMERGS]:
-                    if len(hangseng_data[ALERT_EMERGS][alert]) > 0:
-                        events.append("hangseng_emerg") 
-                        break;
-            elif hangseng_data.has_key(ALERT_WARNS):
-                for alert in hangseng_data[ALERT_WARNS]:
-                    if len(hangseng_data[ALERT_WARNS][alert]) > 0:
-                        events.append("hangseng_warn") 
-                        break;
+#        for collection in self.collections:
+#            hangseng_data = self.readData(collection)
+#            if hangseng_data.has_key(ALERT_EMERGS):
+#                for alert in hangseng_data[ALERT_EMERGS]:
+#                    if len(hangseng_data[ALERT_EMERGS][alert]) > 0:
+#                        events.append("hangseng_emerg") 
+#                        break;
+#            elif hangseng_data.has_key(ALERT_WARNS):
+#                for alert in hangseng_data[ALERT_WARNS]:
+#                    if len(hangseng_data[ALERT_WARNS][alert]) > 0:
+#                        events.append("hangseng_warn") 
+#                        break;
         for subject in self.subjects:
             data = self.readData(subject['fcode'])
             if data.has_key("warn"):
@@ -106,7 +106,8 @@ class AlertSummary:
             return {}
 
     def getLatestDataDay(self, date):
-        datas = self.mongo_helper.find(self.collections[0], {"date":{"$lte":date}})
+        collection = self.subjects[0]["fcode"]
+        datas = self.mongo_helper.find(collection, {"date":{"$lte":date}})
         return datas[-1]["date"]
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
     {"subject":"0175.HK", "rule":"peakDown", "warn":"sqfjslf qqqq"},
     {"subject":"NIO", "rule":"peakDown", "warn":"NIO fsfjsjjskf fs"},
     {"subject":"^HSI", "rule":"continueDown-hsi", "begin":"0115", "end":"0215", "warn":"Tight funding before spring festival, cut 50%"},
-    {"subject":"^HSI", "rule":"peakDown-hsi", "warn":"High probability go down next day when HSI rapic down, cut 50% and watch three days, may be only escape window "},
+    {"subject":"^HSI", "rule":"peakDown-hsi", "warn":"High probability go down next day when HSI rapic down, cut 50% and watch three days, may be only escape window. Assess the scope and duration of the event impact "},
 
     {"subject":"END", "rule":"END", "warn":"END"}
 ]

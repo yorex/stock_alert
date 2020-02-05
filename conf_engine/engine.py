@@ -6,37 +6,39 @@ import logger
 import traceback
 from mongoHelper import MongoHelper
 from filter_duration import DurationFilter
+from filter_peak import PeakFilter
 from transformer_percent import PercentTransformer
+from transformer_k_close_open import KCloseOpenTransformer
 from judger_down import DownJudger
 from judger_up import UpJudger
 from utils import getFormalCode, getToday, getYesterday, parseConfigSubject, parseCustomWarns, parseRuleConfig
 import json
 
 DRY_RUN=False
+#DRY_RUN=True
 DEBUG=False
+#DEBUG=True
 
 class RuleChain:
     def __init__(self, name):
         self.name = name;
         self.subjects = {}
        
-    def parseFilter(self, rule):
-        duration = 30 
-        peakWidth = 30
-        if rule.has_key('duration'):
-            duration = min(duration, rule['duration'])
-        if rule.has_key('peak'):
-            assert rule['peak'].has_key('width')
-            peakWidth = min(peakWidth, rule['peak']['width'])
-        self.filter = DurationFilter(duration, peakWidth)
+    def parsePreFilter(self, rule):
+        self.pre_filter = PeakFilter.parseFilter(rule)
+
+    def parsePostFilter(self, rule):
+        self.post_filter = DurationFilter.parseFilter(rule)
+        assert self.post_filter
 
     def parseTransformer(self, rule):
-        self.transformer = PercentTransformer();
+        self.transformer = KCloseOpenTransformer.parseTransformer(rule) or PercentTransformer.parseTransformer(rule)
+        assert self.transformer
 
     def parseJudger(self, rule):
-        self.judger = DownJudger.parseDownJudger(rule)
-        if not self.judger:
-            self.judger = UpJudger.parseUpJudger(rule)
+        self.judger = DownJudger.parseDownJudger(rule) or UpJudger.parseUpJudger(rule)
+        #if not self.judger:
+        #    self.judger = UpJudger.parseUpJudger(rule)
         assert self.judger
 
     def parseWarnContent(self, rule):
@@ -66,8 +68,10 @@ class RuleEngine:
         for rule_name in rule_conf.keys():
             rule = rule_conf[rule_name]
             rule_chain = RuleChain(rule_name);
-            rule_chain.parseFilter(rule)
+
+            rule_chain.parsePreFilter(rule)
             rule_chain.parseTransformer(rule)
+            rule_chain.parsePostFilter(rule)
             rule_chain.parseJudger(rule)
             rule_chain.parseWarnContent(rule)
             rule_chain.parseSubjects(rule)
@@ -80,22 +84,30 @@ class RuleEngine:
 
     def run_for_date(self, date=getYesterday()):
 
-        datas_len = max([max(chain.filter.peakWidth, chain.filter.duration) for chain in self.chains])
+        datas_len = max([max(chain.pre_filter.peakWidth if chain.pre_filter else 0, chain.post_filter.duration) for chain in self.chains])
         all_warns_ret = []
         
         for subject in self.subjects:
             datas = self._readData(subject, date, datas_len)
             for chain in self.chains:
                 try:
-                    # filte chain subject 
+                    # first: filte chain subject 
                     if len(chain.subjects) > 0 and not chain.subjects.has_key(subject):
                         continue
-
-                    metas, datas_filted = chain.filter.filte(datas)
+                    # second: pre-filte
+                    if chain.pre_filter:
+                        datas_pre_filted = chain.pre_filter.filte(datas)
+                    else:
+                        datas_pre_filted = datas
                     if DEBUG:
-                        logger.info("chain(%s) datas_filted: %s", chain.name, datas_filted)
-                    datas_transformed = chain.transformer.transform(datas_filted)
-                    hit_points = chain.judger.judge(datas_filted, datas_transformed, metas)
+                        logger.info("chain(%s) datas_pre_filted: %s", chain.name, datas_pre_filted)
+                    datas_transformed = chain.transformer.transform(datas_pre_filted)
+                    if DEBUG:
+                        logger.info("chain(%s) datas_transformed: %s", chain.name, datas_transformed)
+                    datas_post_filted = chain.post_filter.filte(datas_transformed)
+                    if DEBUG:
+                        logger.info("chain(%s) datas_post_filted: %s", chain.name, datas_post_filted)
+                    hit_points = chain.judger.judge(datas_post_filted)
                     if hit_points:
                         # date 对应的数据记录
                         cur_data = datas[-1]
@@ -105,7 +117,7 @@ class RuleEngine:
                             warn += "@" + custom_warn
                         cur_data.setdefault("warn", {})[chain.name] = warn
                         self._writeData(subject, {"_id":cur_data["_id"]}, cur_data)
-                        record = "%s date(%s) subject(%s) chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)" % ("DRY-RUN" if self.dryRun else "", cur_data["date"], subject, chain.name, warn, hit_points, [datas_filted[i] for i in hit_points])
+                        record = "%s date(%s) subject(%s) chain(%s) -> warn(%s), hit_points(%s) hit_values(%s)" % ("DRY-RUN" if self.dryRun else "", cur_data["date"], subject, chain.name, warn, hit_points, [datas_post_filted[i] for i in hit_points])
                         logger.info(record)
                         all_warns_ret.append(record)
                 except Exception as e:
