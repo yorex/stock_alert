@@ -13,23 +13,28 @@ class DownJudger(Judger):
     def parseDownJudger(cls, rule):
         downList = []
         is_continue = False
+        is_accelerated = False
         if rule.has_key('down'):
             downList = rule['down']
             is_continue = False
         if rule.has_key('continueDown'):
             downList = rule['continueDown']
             is_continue = True
+        if rule.has_key('acceleratedDown'):
+            downList = rule['acceleratedDown']
+            is_accelerated = True
         if downList:
-            return DownJudger(downList, is_continue)
+            return DownJudger(downList, is_continue, is_accelerated)
         else:
             return None
 
     
-    def __init__(self, steps, is_continue):
+    def __init__(self, steps, is_continue, is_accelerated):
         assert isinstance(steps, list) or isinstance(steps, tuple)
         assert isinstance(is_continue, bool)
         self.steps = steps;
         self.is_continue = is_continue;
+        self.is_accelerated = is_accelerated;
 
     def judge(self, percent_datas):
         assert isinstance(percent_datas, list)
@@ -44,6 +49,11 @@ class DownJudger(Judger):
                 hit_points=[]
                 continue
             if percent_datas[i] < 0 and abs(percent_datas[i]) >= self.steps[sp]:
+                if self.is_accelerated:
+                    if i>0 and abs(percent_datas[i]) < abs(percent_datas[i-1]):
+                        sp = 0;
+                        hit_points = [];
+                        continue; 
                 sp += 1
                 # 收集负坐标
                 hit_points.append(i - len(percent_datas))

@@ -5,20 +5,13 @@ import json
 import sys
 import datetime
 import logger
-from utils import parseConfigSubject
+from utils import parseConfigSubject, getToday, getYesterday
 from to_string import ToString
 
 DEBUG=False
 
 ALERT_WARNS="alert_warns"
 ALERT_EMERGS="alert_emergs"
-
-def getYesterday(): 
-    today=datetime.date.today() 
-    oneday=datetime.timedelta(days=1) 
-    yesterday=today-oneday  
-    return yesterday.strftime("%Y%m%d")
-
 
 class AlertSummary:
     def __init__(self, date=None):
@@ -31,10 +24,39 @@ class AlertSummary:
         if date:
             self.date = date
         else:
-            self.date = self.getLatestDataDay(getYesterday())
+            self.date = self.getLatestDataDay(getToday())
+
+
+    def generateHtmlSummary(self):
+        stringer = ToString("utf-8")
+        content = ""
+        content += """
+    <style>
+      table, th, td {
+      padding: 10px;
+      border: 1px solid black; 
+      border-collapse: collapse;
+      }
+    </style>
+    <style> 
+     .hdc{ font-size:28px} 
+     .tdc{ font-size:26px} 
+    </style> 
+            """
+
+        for subject in self.subjects:
+            content += "<h2 class=\"hdc\">%s</h2>" % subject['name']
+            content += "<table>"
+            data = self.readData(subject['fcode'])
+            if data.has_key("warn"):
+                for ruleName in data['warn']:
+                    content += "<tr class=\"tdc\"><td>%s</td><td>%s</td></tr>" % (ruleName, data["warn"][ruleName])
+            content += "</table>"
+        return content
+ 
 
     def generateSummary(self):
-        stringer = ToString("gbk")
+        stringer = ToString("utf-8")
         content = [self.date]
 #        for collection in self.collections:
 #            collcont =  {}
@@ -61,6 +83,7 @@ class AlertSummary:
         return content
     
     def getEvents(self):
+        stringer = ToString("gbk")
         events = [];
 #        for collection in self.collections:
 #            hangseng_data = self.readData(collection)
@@ -118,5 +141,5 @@ if __name__ == "__main__":
     alert_summary = AlertSummary(date)
     events = alert_summary.getEvents() 
     dingtalker = DingTalkSender()
-    dingtalker.sendText("%d %s %s?date=%s" % (len(events), str(events), "http://47.103.104.36/report", alert_summary.date))
+    dingtalker.sendText("%d %s %s?date=%s" % (len(events), str(events), "http://47.103.104.36/reportHtml", alert_summary.date))
     print alert_summary.generateSummary()

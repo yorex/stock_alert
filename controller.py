@@ -1,5 +1,10 @@
 # coding=utf-8
 
+import sys
+import encodings
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 from flask import Flask
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -101,8 +106,8 @@ def report():
     return jsonify(alert_summart.generateSummary())
 #    return alert_summart.generateSummary()
 
-@app.route('/zh')
-def zh():
+@app.route('/reportHtml')
+def reportHtml():
     s1='''
 <html lang="zh" xml:lang="zh" xmlns="http://www.w3.org/1999/xhtml xmlns:web="http://schemas.live.com/Web/>
     <head>
@@ -118,12 +123,13 @@ def zh():
 '''
     date=request.args.get("date")
     alert_summart = AlertSummary(date)
-    return s1 + alert_summart.generateSummary() + s2
+    return s1 + alert_summart.generateHtmlSummary() + s2
 
 @app.route('/test')
 def test():
     s="数据量附近kjfls计算量凡\"士林是"
-    return jsonify(s.decode("utf-8").encode("gbk"))
+    #return jsonify(s.decode("utf-8").encode("gbk"))
+    return jsonify(s)
 
 @app.route('/stock')
 def stock():

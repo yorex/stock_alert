@@ -82,7 +82,7 @@ class RuleEngine:
 
         self.custom_warns=parseCustomWarns(customwarns_pathfile);
 
-    def run_for_date(self, date=getYesterday()):
+    def run_for_date(self, date=getToday()):
 
         datas_len = max([max(chain.pre_filter.peakWidth if chain.pre_filter else 0, chain.post_filter.duration) for chain in self.chains])
         all_warns_ret = []

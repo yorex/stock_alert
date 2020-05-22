@@ -12,22 +12,27 @@ class UpJudger(Judger):
     def parseUpJudger(cls, rule):
         upList = []
         is_continue = False
+        is_accelerated = False
         if rule.has_key('up'):
             upList = rule['up']
             is_continue = False
         if rule.has_key('continueUp'):
             upList = rule['continueUp']
             is_continue = True
+        if rule.has_key('acceleratedUp'):
+            upList = rule['acceleratedUp']
+            is_accelerated = True
         if upList:
-            return UpJudger(upList, is_continue)
+            return UpJudger(upList, is_continue, is_accelerated)
         else:
             return None
 
-    def __init__(self, steps, is_continue):
+    def __init__(self, steps, is_continue, is_accelerated):
         assert isinstance(steps, list) or isinstance(steps, tuple)
         assert isinstance(is_continue, bool)
         self.steps = steps;
         self.is_continue = is_continue;
+        self.is_accelerated = is_accelerated;
 
     def judge(self, percent_datas):
         assert isinstance(percent_datas, list)
@@ -42,6 +47,11 @@ class UpJudger(Judger):
                 hit_points=[]
                 continue
             if percent_datas[i] > 0 and abs(percent_datas[i]) >= self.steps[sp]:
+                if self.is_accelerated:
+                    if i>0 and abs(percent_datas[i]) < abs(percent_datas[i-1]):
+                        sp = 0;
+                        hit_points = [];
+                        continue; 
                 sp += 1
                 # 收集负坐标
                 hit_points.append(i - len(percent_datas))
