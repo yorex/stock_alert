@@ -55,7 +55,8 @@ class YahooCrawler:
             collectionName = fcode
             if len(self.mongo.find(collectionName, {"date": date})) == 0:
                 self.mongo.insert(collectionName, data)
-                #self.mongo.update(collectionName, {"date":date}, data, True)
+            else:
+                self.mongo.update(collectionName, {"date":date}, data, True)
         except Exception as e:
             logger.error("save_data exception:%s", str(e))
     

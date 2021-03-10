@@ -17,3 +17,6 @@ https://chromedriver.storage.googleapis.com/index.html?path=75.0.3770.140/
 
 #lxml
 sudo yum install python-lxml.x86_64
+
+#FutuOpenD  centos
+https://softwarefile.futunn.com/FutuOpenD_2.12.900_Centos7.tar.gz

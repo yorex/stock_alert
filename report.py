@@ -26,6 +26,18 @@ class AlertSummary:
         else:
             self.date = self.getLatestDataDay(getToday())
 
+    def generateTextSummary(self):
+        stringer = ToString("utf-8")
+        content = "Date: %s" % self.date
+
+        for subject in self.subjects:
+            data = self.readData(subject['fcode'])
+            if data.has_key("warn"):
+                content += "\n-------- %s --------\n" % subject['name']
+                for ruleName in data['warn']:
+                    content += "%-12s\t%s\n" % (ruleName, data["warn"][ruleName])
+        return content
+ 
 
     def generateHtmlSummary(self):
         stringer = ToString("utf-8")
@@ -138,8 +150,13 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         date = sys.argv[1]
 #    date='20190828'
-    alert_summary = AlertSummary(date)
-    events = alert_summary.getEvents() 
+
     dingtalker = DingTalkSender()
-    dingtalker.sendText("%d %s %s?date=%s" % (len(events), str(events), "http://47.103.104.36/reportHtml", alert_summary.date))
-    print alert_summary.generateSummary()
+    alert_summary = AlertSummary(date)
+
+    if 0:
+        events = alert_summary.getEvents() 
+        dingtalker.sendText("%d %s %s?date=%s" % (len(events), str(events), "http://47.103.104.36/reportHtml", alert_summary.date))
+    else:
+        dingtalker.sendText(alert_summary.generateTextSummary())
+    print alert_summary.generateTextSummary()
